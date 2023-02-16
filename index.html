@@ -7,6 +7,9 @@
     <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <title>Minimalist To-Do</title>
+    
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="manifest" href="/manifest.json">
 </head>
 <body>
     <div class="mainHeading">
@@ -19,9 +22,15 @@
         <h2> Add a new task </h2> 
         <form>
             <div class="taskNameInput">
+                <label for="taskName">Task Name</label>
                 <input type="text" id="taskName" name="taskName"  placeholder="Enter a task">
+
+                <label for="dueDate">Due Date</label>
                 <input type="date" id="dueDate" name="dueDate">
+                
+                <label for="assignedTo">Assigned To</label>
                 <input type="text" id="assignedTo" name="assignedTo" placeholder="Assigned to">
+                
                 <input type="submit" value="Add Task">
             </div>
             <!-- Create a form for a new task -->
@@ -30,18 +39,16 @@
 
     <div class="pendingToDoList">
         <h2> Pending Tasks</h2>
-        <ul>
-            <!-- Display pending tasks -->
-        </ul>
+        <div name="pendingTasks" id="pendingTasks"></div>
     </div>
-
+    
     <div class="completedToDoList">
         <h2> Completed Tasks</h2>
-        <ul>
-            <!-- Display completed tasks -->
-        </ul>
+        <div name="completedTasks" id="completedTasks"></div>
     </div>
 </body>
+<script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+<script src="/db.js"></script>
 <script src="/script.js"></script>
 
 </html>

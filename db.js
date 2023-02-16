@@ -9,7 +9,7 @@ db.version(1).stores({
         dueDate,
         assignedTo,
         isCompleted`,
-});
+},{ autoIncrement: true });
 
 async function getCompletedTasksFromDB() {
     if (db && db.tasks) { // check if db and the tasks table are created
@@ -36,7 +36,7 @@ async function getPendingTasksFromDB() {
 }
 
 function addnewTask(id, taskName, dueDate, assignedTo, isCompleted) {
-    db.students.put({id, taskName, dueDate, assignedTo, isCompleted }, 2)
+    db.tasks.put({ taskName, dueDate, assignedTo, isCompleted }, 2)
         .then(() => true)
         .catch(err => {
             alert("Ouch... " + err);
@@ -44,7 +44,7 @@ function addnewTask(id, taskName, dueDate, assignedTo, isCompleted) {
 }
 
 function markTaskCompleted(id) {
-    db.students.update(id, {isCompleted: "true"})
+    db.tasks.update(id, {isCompleted: "true"})
         .then(() => true)
         .catch(err => {
             alert("Ouch... " + err);
