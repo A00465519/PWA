@@ -11,95 +11,130 @@ async function registerServiceWorker() {
     }
 }
 async function main() {
+    
     console.log("begin")
+
+    // Read the current form
     const form = document.querySelector('form');
     const taskNameInput = document.querySelector("[name='taskName']");
     const dueDateInput = document.querySelector("[name='dueDate']");
     const assignedToInput = document.querySelector("[name='assignedTo']");
-
-    const pendingTasksList = document.getElementById('pendingTasks');
-    const completedTasksList = document.getElementById('completedTasks');
     
-    // const pendingTasksList = [];
-    // const completedTasksList = [];
 
-    const dbPendingTasks = await getPendingTasksFromDB()
-    const dbCompletedTasks = await getCompletedTasksFromDB()
+    let dbPendingTasks = []
+    let dbCompletedTasks = []
+    await loadTasksFromDB();
+    let pendingTasksList = []
+    let completedTasksList = []
+    let pendingTasksListDOM = null
+    let completedTasksListDOM = null
+    updateDOM()
+    
 
-    if (dbPendingTasks) {
-        dbPendingTasks.forEach(dbPendingTask => {
-            addTaskElement(dbPendingTask);
-            pendingTasksList.push(dbPendingTask)
-        });
+    // Read the tasks in the database
+    async function loadTasksFromDB() {
+        dbPendingTasks = await getPendingTasksFromDB()
+        dbCompletedTasks = await getCompletedTasksFromDB()
     }
-    if (dbCompletedTasks) {
-        dbCompletedTasks.forEach(dbCompletedTask => {
-            addTaskElement(dbCompletedTask);
-            completedTasksList.push(dbPendingTask)
-        });
-    }
+    
+    // Update the DOM
+    function updateDOM () {
+        pendingTasksList = []
+        completedTasksList = []
+        pendingTasksListDOM = document.getElementById("pendingTasks")
+        completedTasksListDOM = document.getElementById("completedTasks") 
+        pendingTasksListDOM.textContext = ''
+        completedTasksListDOM.textContext = ''
 
-    function addTaskElement(task) {
-
-        let taskType = ''
-        let checkboxChecked = false
-
-        if(task.isCompleted == "true") {
-            taskType = "Completed"
-        } else {
-            taskType = "Pending"
+        // For any pending task in database that is not in the DOM add it to DOM
+        if (dbPendingTasks) {
+            dbPendingTasks.forEach(dbPendingTask => {
+                addTaskToDOM(dbPendingTask);
+                pendingTasksList.push(dbPendingTask)
+            });
         }
+        // For any completed task in database that is not in the DOM add it to DOM
+        if (dbCompletedTasks) {
+            dbCompletedTasks.forEach(dbCompletedTask => {
+                addTaskToDOM(dbCompletedTask);
+                completedTasksList.push(dbCompletedTask)
+            });
+        }
+    }
 
-        const div = document.createElement('div')
-        div.classList.add("taskClass")
-        div.id = task.id
-
-        const h1TaskName = document.createElement('h1')
-        h1TaskName.classList.add("taskNameClass")
-        h1TaskName.innerHTML = task.name
+    function addTaskToDB(task) {
+        addnewTask(task.taskName, task.dueDate, task.assignedTo, task.isCompleted);
+    }
+    
+    async function addTaskToDOM(task) {
+        const div = document.createElement('div');
+        div.classList.add("taskClass");
+        div.id = task.id;
+    
+        const h1TaskName = document.createElement('h1');
+        h1TaskName.classList.add("taskNameClass");
+        h1TaskName.innerHTML = task.taskName;
         
-        const pDueDate = document.createElement('p')
-        pDueDate.classList.add("taskDueDateClass")
-        pDueDate.classList.add("inlineBlock")
-        pDueDate.innerHTML = task.dueDate
+        const pDueDate = document.createElement('p');
+        pDueDate.classList.add("taskDueDateClass");
+        pDueDate.classList.add("inlineBlock");
+        pDueDate.innerHTML = task.dueDate;
+    
+        const pAssignedTo = document.createElement('p');
+        pAssignedTo.classList.add("taskAssignedToClass");
+        pAssignedTo.classList.add("inlineBlock");
+        pAssignedTo.innerHTML = task.assignedTo;
         
-        const pAssignedTo = document.createElement('p')
-        pAssignedTo.classList.add("taskAssignedToClass")
-        pAssignedTo.classList.add("inlineBlock")
-        pAssignedTo.innerHTML = task.assignedTo
-         
-        const checkBoxIsCompleted = document.createElement('input')
-        checkBoxIsCompleted.classList.add(taskType)
-        checkBoxIsCompleted.classList.add("inlineBlock")
+        let checkboxChecked = false;
+        const checkBoxIsCompleted = document.createElement('input');
+        checkBoxIsCompleted.classList.add("inlineBlock");
         checkBoxIsCompleted.type = "checkbox";
-        // checkBoxIsCompleted.name = task.id + "name";
         checkBoxIsCompleted.checked = checkboxChecked;
-        checkBoxIsCompleted.id = "id";
-
-        div.appendChild(h1TaskName)
-        div.appendChild(pDueDate)
-        div.appendChild(pAssignedTo)
-        div.appendChild(checkBoxIsCompleted)
-
-        if (taskType == "Completed") {
-            completedTasksList.appendChild(div)
-            addnewTask(task.id, task.name, task.dueDate, task.assignedTo, "true")
+        checkBoxIsCompleted.id = task.id + "id";
+        checkBoxIsCompleted.addEventListener('change', function() {
+            onCheckBoxChange(checkBoxIsCompleted.id, this.checked)
+        });
+    
+        div.appendChild(h1TaskName);
+        div.appendChild(pDueDate);
+        div.appendChild(pAssignedTo);
+        div.appendChild(checkBoxIsCompleted);
+    
+        if (task.isCompleted === "true") {
+            completedTasksListDOM.appendChild(div);
         } else {
-            pendingTasksList.appendChild(div)
-            addnewTask(task.id, task.name, task.dueDate, task.assignedTo, "false")
+            pendingTasksListDOM.appendChild(div);
+        }
+        taskNameInput.value = '';
+        dueDateInput.value = '';
+        assignedToInput.value = '';
+    }
+
+    async function onCheckBoxChange(taskid, isCompleted) {
+        taskIdVal = taskid.split('id')
+        if(taskIdVal && taskIdVal.length !== 0) {
+            return await UpdateTaskStatus(taskIdVal[0], isCompleted).then(
+                loadTasksFromDB()
+            ).then(
+                updateDOM()
+            )
         }
 
-        // localStorage.setItem("completedTasks", JSON.stringify(completedTasksList));
-        // localStorage.setItem("pendingTasks", JSON.stringify(pendingTasksList));
-
-        taskNameInput.value = ''
-        dueDateInput.value = '' 
-        assignedToInput.value = ''
     }
+
+    async function UpdateTaskStatus(id, isCompleted) {
+        if (isCompleted) {
+            return await markTaskCompleted(id)
+        } else {
+            return await markTaskPending(id)
+        }
+    }
+
     // Events
     form.onsubmit = (event) => {
         event.preventDefault();
-        addTaskElement({name: taskNameInput.value, dueDate: dueDateInput.value, assignedTo: assignedToInput.value});
+        addTaskToDB({taskName: taskNameInput.value, dueDate: dueDateInput.value, assignedTo: assignedToInput.value});
+        addTaskToDOM({taskName: taskNameInput.value, dueDate: dueDateInput.value, assignedTo: assignedToInput.value});
     }
 }
 

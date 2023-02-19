@@ -1,52 +1,53 @@
 var db = new Dexie("toDoList");
 
-// DB with single table "students" with primary key "id" and
-// indexes on properties "name" and "city"
 db.version(1).stores({
-    tasks: `
-        id,
-        name,
-        dueDate,
-        assignedTo,
-        isCompleted`,
-},{ autoIncrement: true });
+    tasks: '++id, taskName, dueDate, assignedTo, isCompleted',
+});
 
+// async function getCompletedTasksFromDB() {
 async function getCompletedTasksFromDB() {
-    if (db && db.tasks) { // check if db and the tasks table are created
+    if (db && db.tasks) { // check if db and the tasks table are created    
         return await db.tasks.filter((task) => { 
             return task.isCompleted == "true"
-        }).toArray().then((data) => {
-            return data
-        })
+        }).toArray()
     } else {
         return undefined
     }
 }
 
+// async function getPendingTasksFromDB() {
 async function getPendingTasksFromDB() {
     if (db && db.tasks) { // check if db and the tasks table are created
         return await db.tasks.filter((task) => { 
-            return task.isCompleted == "flase"
-        }).toArray().then((data) => {
-            return data
-        })
+            return task.isCompleted == "false"
+        }).toArray()
     } else {
         return undefined
     }
 }
 
-function addnewTask(id, taskName, dueDate, assignedTo, isCompleted) {
-    db.tasks.put({ taskName, dueDate, assignedTo, isCompleted }, 2)
+function addnewTask(taskName, dueDate, assignedTo, isCompleted) {
+    isCompleted = "false"
+    db.tasks.put({ taskName, dueDate, assignedTo, isCompleted })
         .then(() => true)
         .catch(err => {
             alert("Ouch... " + err);
         });
 }
 
-function markTaskCompleted(id) {
-    db.tasks.update(id, {isCompleted: "true"})
+async function markTaskCompleted(id) {
+    return await db.tasks.update(id, {isCompleted: "true"})
         .then(() => true)
         .catch(err => {
             alert("Ouch... " + err);
         });
 }
+
+async function markTaskPending(id) {
+    return await db.tasks.update(id, {isCompleted: "false"})
+        .then(() => true)
+        .catch(err => {
+            alert("Ouch... " + err);
+        });
+}
+
